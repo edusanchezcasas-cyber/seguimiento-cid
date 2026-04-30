@@ -254,8 +254,8 @@ function renderDetail() {
     const eff = s.status==="completado"?100:s.progress;
     const st = STATUSES.find(x=>x.key===s.status);
     const sliderHtml = s.status!=="completado" ? `
-      <div class="progress-label-row"><span>Avance</span><span class="val" style="color:${m.color}">${s.progress}%</span></div>
-      <input type="range" min="0" max="100" step="5" value="${s.progress}" style="accent-color:${m.color}" onchange="updateProgress(${i},this.value)">
+      <div class="progress-label-row"><span>Avance</span><span class="val" id="lbl-${selected}-${i}" style="color:${m.color}">${s.progress}%</span></div>
+      <input type="range" min="0" max="100" step="5" value="${s.progress}" style="accent-color:${m.color}" oninput="updateProgress(${i},this.value)">
     ` : "";
     return `<div class="obj-card">
       <div class="obj-top">
@@ -309,7 +309,8 @@ function updateProgress(objIdx, val) {
   data[MEMBERS[selected].name]["obj"+objIdx].progress = parseInt(val);
   const fill = document.getElementById(`fill-${selected}-${objIdx}`);
   if (fill) fill.style.width = val+"%";
-  const labels = document.querySelectorAll(".progress-label-row .val");
+  const lbl = document.getElementById(`lbl-${selected}-${objIdx}`);
+  if (lbl) lbl.textContent = val+"%";
   saveData();
   renderStats();
   renderTeamBar();
