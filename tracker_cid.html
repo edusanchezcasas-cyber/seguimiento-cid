@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguimiento de Objetivos CID — Vinatea & Toyama</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f2;color:#1a1a18;min-height:100vh;padding:20px 14px}
+:root{--bg:#fff;--bg2:#f3f3f0;--border:rgba(0,0,0,.1);--text:#1a1a18;--text2:#6b6b68;--text3:#9e9e9b;--r:10px;--rl:14px}
+.wrap{max-width:980px;margin:0 auto}
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.hdr-l .meta{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.hdr-l .title{font-size:20px;font-weight:600}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.save-ind{font-size:11px}
+.btn-xl{display:flex;align-items:center;gap:6px;background:#0F6E56;color:#fff;border:none;border-radius:8px;padding:8px 15px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-xl:hover{opacity:.88}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:18px}
+.sc{background:var(--bg2);border-radius:var(--r);padding:10px 14px}
+.sc-n{font-size:22px;font-weight:600}
+.sc-l{font-size:11px;color:var(--text3);margin-top:2px}
+/* Area tabs */
+.area-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.area-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;border:1.5px solid transparent;transition:all .18s;background:var(--bg)}
+.area-tab.active{color:#fff}
+.area-badge{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600}
+/* Team bar */
+.tbar-wrap{margin-bottom:20px}
+.tbar{display:flex;gap:3px;height:8px;border-radius:8px;overflow:hidden;background:var(--bg2)}
+.tbar-seg{flex:1;cursor:pointer;transition:opacity .2s}
+.tbar-seg:first-child{border-radius:8px 0 0 8px}
+.tbar-seg:last-child{border-radius:0 8px 8px 0}
+.tbar-lbls{display:flex;margin-top:4px}
+.tbar-lbls span{flex:1;text-align:center;font-size:10px;color:var(--text3)}
+/* Layout */
+.layout{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:start}
+@media(max-width:620px){.layout{grid-template-columns:1fr}}
+.sidebar-lbl{font-size:11px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.mlist{display:flex;flex-direction:column;gap:7px}
+/* Member card */
+.mc{display:flex;align-items:center;gap:9px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .18s}
+.mc.active{border-width:2px}
+.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;border-width:1.5px;border-style:solid}
+.mc-info{flex:1;min-width:0}
+.mc-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.ring-wrap{position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ring-lbl{position:absolute;font-size:8px;font-weight:600}
+/* Detail */
+.det-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.det-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0;border-width:2px;border-style:solid}
+.det-name{font-size:16px;font-weight:600}
+.det-sub{font-size:12px;color:var(--text3);margin-top:2px}
+/* Obj card */
+.oc{background:var(--bg);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px}
+.oc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.oc-num{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.oc-txt{flex:1;font-size:13px;line-height:1.5}
+.oc-meta{display:inline-block;margin-top:4px;font-size:10px;border-radius:10px;padding:1px 7px;font-weight:500}
+.oc-w{text-align:right;flex-shrink:0}
+.oc-wl{font-size:10px;color:var(--text3);margin-bottom:2px}
+.oc-wn{font-size:16px;font-weight:600}
+.oc-wdate{font-size:10px;color:var(--text3);margin-top:2px}
+.st-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.st-btn{border-width:1.5px;border-style:solid;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap}
+.hint{font-size:11px;color:var(--text3)}
+.plr{display:flex;justify-content:space-between;margin-bottom:4px}
+.plr span{font-size:11px}
+.plr .v{font-weight:500}
+input[type=range]{width:100%;display:block;margin-bottom:11px;height:20px}
+.pbar{height:6px;border-radius:6px;background:var(--bg2);overflow:hidden;margin-bottom:12px}
+.pfill{height:100%;border-radius:6px;transition:width .35s ease}
+textarea{width:100%;font-family:inherit;font-size:12px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;resize:vertical}
+textarea::placeholder{color:var(--text3)}
+/* Attachment */
+.attach-section{margin-top:10px;border-top:1px dashed var(--border);padding-top:10px}
+.attach-btn{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
+.attach-btn:hover{border-color:#185FA5;color:#185FA5}
+.attach-list{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.attach-item{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 10px}
+.attach-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.attach-info{flex:1;min-width:0}
+.attach-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attach-size{font-size:10px;color:var(--text3);margin-top:1px}
+.attach-actions{display:flex;gap:5px;flex-shrink:0}
+.attach-view{font-size:11px;color:#185FA5;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0}
+.attach-del{font-size:11px;color:#cc3333;cursor:pointer;background:none;border:none;padding:0}
+.attach-input{display:none}
+.attach-img-prev{max-width:100%;max-height:120px;border-radius:6px;margin-top:6px;border:1px solid var(--border);display:block}
+.size-warn{font-size:10px;color:#cc6600;margin-top:4px}
+
+.det-foot{font-size:11px;color:var(--text3);text-align:right;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="meta">Vinatea &amp; Toyama · CID</div>
+      <div class="title">Seguimiento de objetivos</div>
+    </div>
+    <div class="hdr-r">
+      <span class="save-ind" id="si" style="color:#0F6E56">✓ Guardado</span>
+      <button class="btn-xl" onclick="exportExcel()">↓ Exportar Excel</button>
+    </div>
+  </div>
+
+  <div class="stats" id="statsGrid"></div>
+  <div class="area-tabs" id="areaTabs"></div>
+
+  <div class="tbar-wrap">
+    <div class="tbar" id="tbar"></div>
+    <div class="tbar-lbls" id="tbarLbls"></div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="sidebar-lbl" id="sidebarLbl">Equipo</div>
+      <div class="mlist" id="mlist"></div>
+    </div>
+    <div id="detail"></div>
+  </div>
+</div>
+
+<script>
+const AREAS = [
+  {
+    key:"procesal", label:"Procesal", supervisor:"Edu Sánchez",
+    color:"#185FA5", bg:"#E6F1FB",
+    members:[
+      {name:"Alessandra Hernández",initials:"AH",role:"Asistente",color:"#185FA5",bg:"#E6F1FB",
+        objectives:[
+          {text:"Integrar el proceso de registro de demandas y/o nuevos procesos con el uso de Harvey al 100% – IJE.",weight:40,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:40,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Brando Castro",initials:"BC",role:"Asistente",color:"#0F6E56",bg:"#E1F5EE",
+        objectives:[
+          {text:"Ejecutar el registro del 100% de demandas y/o nuevos procesos con el uso de Harvey con toda la información necesaria para la gestión de la información procesal.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 1 propuesta de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Camila Morán",initials:"CM",role:"Asistente",color:"#854F0B",bg:"#FAEEDA",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control operativo de Paralegal Procesal.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Jemima Gonzáles",initials:"JG",role:"Asistente",color:"#534AB7",bg:"#EEEDFE",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control operativo de Paralegal Procesal.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Jose Gutiérrez",initials:"JG",role:"Asistente",color:"#993556",bg:"#FBEAF0",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control operativo de Paralegal Procesal.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Néstor Rossell",initials:"NR",role:"Asistente",color:"#5F5E5A",bg:"#F1EFE8",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control operativo de Paralegal Procesal.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+    ]
+  },
+  {
+    key:"insp", label:"Inspecciones / Procuraduría", supervisor:"Yuorley Pulache",
+    color:"#7B3FA0", bg:"#F3E8FC",
+    members:[
+      {name:"Alexis Carbajo",initials:"AC",role:"Asistente",color:"#7B3FA0",bg:"#F3E8FC",
+        objectives:[
+          {text:"Garantizar la actualización diaria del 100% de los sistemas de control operativo de Procuraduría.",weight:25,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Enviar el reporte mensual de tasas a más tardar el cuarto día hábil del siguiente mes.",weight:25,date:"Diciembre"},
+        ]},
+      {name:"Daniel López",initials:"DL",role:"Asistente",color:"#C45E0A",bg:"#FDEEE1",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control operativo de Procuraduría.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 1 propuesta de mejora para la eficiencia o calidad de las operaciones paralegales, legales o de procuraduría.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Marcia Wong",initials:"MW",role:"Asistente",color:"#1A6E8A",bg:"#E0F2F8",
+        objectives:[
+          {text:"Integrar el proceso de registro de resoluciones inspectivas con el uso de Harvey al 100% – IJE.",weight:30,date:"Agosto"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 1 propuesta de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales de Consultoría.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Paulo Sánchez",initials:"PS",role:"Asistente",color:"#2C6E2E",bg:"#E4F4E4",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control operativo de Procuraduría.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 1 propuesta de mejora para la eficiencia o calidad de las operaciones paralegales, legales o de procuraduría.",weight:20,date:"Diciembre"},
+        ]},
+    ]
+  },
+  {
+    key:"data", label:"Data", supervisor:"Claudia Vasquez",
+    color:"#0A6E7A", bg:"#DDF4F7",
+    members:[
+      {name:"Jimmy Vilca",initials:"JV",role:"Analista",color:"#0A6E7A",bg:"#DDF4F7",
+        objectives:[
+          {text:"Ejecutar la actualización semanal del 100% de los sistemas de control de datos de Paralegal Procesal.",weight:40,date:"Diciembre"},
+          {text:"Automatizar el 100% de los reportes periódicos del equipo Paralegal Procesal a partir del Data Warehouse.",weight:40,date:"Diciembre"},
+          {text:"Implementar y ejecutar 2 propuestas de mejora de impacto para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Joselin Janampa",initials:"JJ",role:"Auxiliar",color:"#5A3DAA",bg:"#EDE8FB",
+        objectives:[
+          {text:"Ejecutar la actualización diaria del 100% de los sistemas de control de datos de Paralegal Procesal.",weight:40,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:40,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+    ]
+  },
+  {
+    key:"sup", label:"Supervisión", supervisor:"Luis Chavez",
+    color:"#7A4400", bg:"#F9EDD9",
+    members:[
+      {name:"Edu Sánchez",initials:"ES",role:"Analista",color:"#185FA5",bg:"#E6F1FB",
+        objectives:[
+          {text:"Garantizar la actualización semanal del 100% de los sistemas de control operativo de Paralegal Procesal.",weight:30,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:50,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora de impacto para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Claudia Vásquez",initials:"CV",role:"Analista",color:"#0A6E7A",bg:"#DDF4F7",
+        objectives:[
+          {text:"Implementar y garantizar la actualización semanal del 100% de los sistemas de control de datos de Paralegal Procesal.",weight:40,date:"Diciembre"},
+          {text:"Obtener de BCP un mínimo de 90% en encuesta de satisfacción del cliente respecto del servicio especializado – Base de procesos judiciales.",weight:40,date:"Diciembre"},
+          {text:"Implementar 2 productos de información de impacto para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Yuorley Pulache",initials:"YP",role:"Analista",color:"#7B3FA0",bg:"#F3E8FC",
+        objectives:[
+          {text:"Implementar y garantizar la actualización semanal del 100% de los sistemas de control operativo de Paralegal Inspecciones, Paralegal Consultoría y de Procuraduría.",weight:40,date:"Julio"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:40,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Ejecutar 2 propuestas de mejora de impacto para la eficiencia o calidad de las operaciones paralegales y/o legales.",weight:20,date:"Diciembre"},
+        ]},
+      {name:"Luis Chavez",initials:"LC",role:"Jefe",color:"#7A4400",bg:"#F9EDD9",
+        objectives:[
+          {text:"Ejecutar el 100% del proyecto de Transformación Digital.",weight:40,date:"Diciembre"},
+          {text:"No exceder las incidencias contingentes / quejas a máximo 1 por trimestre.",weight:35,date:"Diciembre",meta:"Meta: 100%"},
+          {text:"Obtener un puntaje mínimo de 4.0% en el grado de satisfacción en la encuesta interna de calidad.",weight:10,date:"Diciembre"},
+          {text:"Ejecutar el 100% del proyecto de Centralización de Asuntos / Propuestas de Honorarios.",weight:15,date:"Junio"},
+        ]},
+    ]
+  },
+];
+
+const STATUSES=[
+  {key:"pendiente",label:"Pendiente",color:"#888780",bg:"#F1EFE8"},
+  {key:"en_progreso",label:"En progreso",color:"#185FA5",bg:"#E6F1FB"},
+  {key:"completado",label:"Completado",color:"#0F6E56",bg:"#E1F5EE"},
+];
+const STORAGE_KEY="cid-full-v1";
+let selArea=0,selMember=0,data={},saveTimer=null;
+
+function defObj(){return{status:"pendiente",progress:0,notes:"",attachments:[]}}
+function defMember(m){const d={};m.objectives.forEach((_,i)=>d["obj"+i]=defObj());return d}
+function defData(){const d={};AREAS.forEach(a=>a.members.forEach(m=>d[mkKey(a,m)]=defMember(m)));return d}
+function mkKey(a,m){return a.key+"::"+m.name}
+
+function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)return JSON.parse(r);}catch{}return defData()}
+function saveData(){
+  setSaved(false);clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}catch{}setSaved(true)},400);
+}
+function setSaved(ok){const el=document.getElementById("si");el.textContent=ok?"✓ Guardado":"Guardando...";el.style.color=ok?"#0F6E56":"#9e9e9b"}
+
+function calcW(m,ms){
+  return m.objectives.reduce((acc,obj,i)=>{
+    const s=ms["obj"+i]||defObj();
+    const p=s.status==="completado"?100:s.progress;
+    return acc+(p*obj.weight)/100;
+  },0);
+}
+function nextStatus(cur){const i=STATUSES.findIndex(s=>s.key===cur);return STATUSES[(i+1)%STATUSES.length].key}
+function slbl(key){return{pendiente:"Pendiente",en_progreso:"En progreso",completado:"Completado"}[key]}
+
+function ring(pct,color,size){
+  const r=(size-6)/2,circ=2*Math.PI*r,dash=(pct/100)*circ;
+  return`<svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="5"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-dasharray="${dash} ${circ}" stroke-linecap="round" style="transition:stroke-dasharray .4s"/></svg>`;
+}
+
+function areaStats(a){
+  let totalObjs=0,completedObjs=0,sumPct=0;
+  a.members.forEach(m=>{
+    const ms=data[mkKey(a,m)]||defMember(m);
+    sumPct+=calcW(m,ms);
+    m.objectives.forEach((_,i)=>{totalObjs++;if((ms["obj"+i]||defObj()).status==="completado")completedObjs++;});
+  });
+  return{totalMembers:a.members.length,totalObjs,completedObjs,avg:Math.round(sumPct/a.members.length)};
+}
+
+function renderStats(){
+  const a=AREAS[selArea];
+  const{totalMembers,totalObjs,completedObjs,avg}=areaStats(a);
+  const supFirstName=a.supervisor.split(" ")[0];
+  document.getElementById("statsGrid").innerHTML=[
+    {label:"Avance del área",value:avg+"%",color:a.color,big:true},
+    {label:"Obj. completados",value:completedObjs+"/"+totalObjs,color:"#0F6E56",big:true},
+    {label:"Colaboradores",value:totalMembers,color:"#534AB7",big:true},
+    {label:"Supervisor",value:a.supervisor,color:"#7A4400",big:false},
+  ].map(s=>`<div class="sc" style="border-left:3px solid ${s.color}22"><div class="sc-n" style="color:${s.color};font-size:${s.big?"22px":"14px"};font-weight:600">${s.value}</div><div class="sc-l">${s.label}</div></div>`).join("");
+}
+
+function renderAreaTabs(){
+  document.getElementById("areaTabs").innerHTML=AREAS.map((a,i)=>{
+    const memberCount=a.members.length;
+    const avgPct=Math.round(a.members.reduce((acc,m)=>acc+calcW(m,data[mkKey(a,m)]||defMember(m)),0)/memberCount);
+    const isActive=i===selArea;
+    return`<div class="area-tab${isActive?" active":""}" style="background:${isActive?a.color:"var(--bg)"};color:${isActive?"#fff":a.color};border-color:${a.color}44" onclick="selectArea(${i})">
+      ${a.label}
+      <span class="area-badge" style="background:${isActive?"rgba(255,255,255,.25)":a.bg};color:${isActive?"#fff":a.color}">${avgPct}%</span>
+    </div>`;
+  }).join("");
+}
+
+function renderTeamBar(){
+  const area=AREAS[selArea];
+  document.getElementById("tbar").innerHTML=area.members.map((m,i)=>{
+    const pct=calcW(m,data[mkKey(area,m)]||defMember(m));
+    const op=pct>0?0.65+(pct/100)*0.35:0.15;
+    return`<div class="tbar-seg" style="background:${m.color};opacity:${op}" title="${m.name}: ${Math.round(pct)}%" onclick="selectMember(${i})"></div>`;
+  }).join("");
+  document.getElementById("tbarLbls").innerHTML=area.members.map(m=>`<span style="flex:1;text-align:center">${m.initials}</span>`).join("");
+}
+
+function renderSidebar(){
+  const area=AREAS[selArea];
+  document.getElementById("sidebarLbl").textContent="Supervisor: "+area.supervisor;
+  document.getElementById("mlist").innerHTML=area.members.map((m,i)=>{
+    const ms=data[mkKey(area,m)]||defMember(m);
+    const pct=Math.round(calcW(m,ms));
+    const comp=m.objectives.filter((_,j)=>(ms["obj"+j]||defObj()).status==="completado").length;
+    const isAct=i===selMember;
+    return`<div class="mc${isAct?" active":""}" style="background:${isAct?m.bg:"var(--bg)"};border-color:${isAct?m.color+"88":"var(--border)"}" onclick="selectMember(${i})">
+      <div class="av" style="background:${m.bg};color:${m.color};border-color:${m.color}44">${m.initials}</div>
+      <div class="mc-info">
+        <div class="mc-name">${m.name}</div>
+        <div class="mc-sub">${m.role} · ${comp}/${m.objectives.length} obj.</div>
+      </div>
+      <div class="ring-wrap">${ring(pct,m.color,36)}<span class="ring-lbl" style="color:${m.color}">${pct}%</span></div>
+    </div>`;
+  }).join("");
+}
+
+function renderDetail(){
+  const area=AREAS[selArea];
+  const m=area.members[selMember];
+  const ms=data[mkKey(area,m)]||defMember(m);
+  const wp=Math.round(calcW(m,ms));
+  const objCards=m.objectives.map((obj,i)=>{
+    const s=ms["obj"+i]||defObj();
+    const eff=s.status==="completado"?100:s.progress;
+    const st=STATUSES.find(x=>x.key===s.status);
+    const slider=s.status!=="completado"?`
+      <div class="plr"><span>Avance</span><span class="v" id="lbl-${selArea}-${selMember}-${i}" style="color:${m.color}">${s.progress}%</span></div>
+      <input type="range" min="0" max="100" step="5" value="${s.progress}" style="accent-color:${m.color}" oninput="updProg(${i},this.value)">
+    `:"";
+    return`<div class="oc">
+      <div class="oc-top">
+        <div class="oc-num" style="background:${m.color}18;color:${m.color}">${i+1}</div>
+        <div class="oc-txt">${obj.text}${obj.meta?`<div><span class="oc-meta" style="background:${m.color}18;color:${m.color}">${obj.meta}</span></div>`:""}</div>
+        <div class="oc-w"><div class="oc-wl">Peso</div><div class="oc-wn" style="color:${m.color}">${obj.weight}%</div><div class="oc-wdate">${obj.date}</div></div>
+      </div>
+      <div class="st-row">
+        <button class="st-btn" style="background:${st.bg};color:${st.color};border-color:${st.color}44" onclick="cycleStatus(${i})">${st.label}</button>
+        <span class="hint">clic para cambiar</span>
+      </div>
+      ${slider}
+      <div class="pbar"><div class="pfill" id="fill-${selArea}-${selMember}-${i}" style="width:${eff}%;background:${m.color}"></div></div>
+      <textarea rows="2" placeholder="Agregar comentario u observación..." oninput="updNotes(${i},this.value)">${s.notes||""}</textarea>
+      <div class="attach-section">
+        <input class="attach-input" id="file-inp-${i}" type="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.eml,.msg,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.zip" onchange="handleAttach(${i},this)">
+        <button class="attach-btn" onclick="triggerAttach(${i})">📎 Adjuntar evidencia</button>
+        ${(()=>{
+          const atts=(s.attachments||[]);
+          if(!atts.length)return'<p style="font-size:11px;color:var(--text3);margin-top:6px">Sin evidencias adjuntas.</p>';
+          return'<div class="attach-list">'+atts.map((att,ai)=>`<div class="attach-item">
+            <div class="attach-icon" style="background:${m.color}15">${getFileIcon(att.type)}</div>
+            <div class="attach-info"><div class="attach-name">${att.name}</div><div class="attach-size">${fmtSize(att.size)} · ${att.date}</div></div>
+            <div class="attach-actions">
+              <button class="attach-view" onclick="viewAttach(${i},${ai})">Ver</button>
+              <button class="attach-del" onclick="removeAttach(${i},${ai})">✕</button>
+            </div>
+          </div>`).join('')+'</div>';
+        })()}
+      </div>
+    </div>`;
+  }).join("");
+  document.getElementById("detail").innerHTML=`
+    <div class="det-hdr">
+      <div class="det-av" style="background:${m.bg};color:${m.color};border-color:${m.color}66">${m.initials}</div>
+      <div><div class="det-name">${m.name}</div><div class="det-sub">${m.role} · ${area.label} · Avance ponderado: ${wp}%</div></div>
+    </div>
+    ${objCards}
+    <div class="det-foot">Los cambios se guardan automáticamente.</div>
+  `;
+}
+
+function render(){renderStats();renderAreaTabs();renderTeamBar();renderSidebar();renderDetail()}
+
+function selectArea(i){selArea=i;selMember=0;render()}
+function selectMember(i){selMember=i;renderSidebar();renderDetail();renderTeamBar()}
+
+function cycleStatus(objIdx){
+  const area=AREAS[selArea],m=area.members[selMember],key=mkKey(area,m);
+  if(!data[key])data[key]=defMember(m);
+  data[key]["obj"+objIdx].status=nextStatus(data[key]["obj"+objIdx].status);
+  saveData();render();
+}
+function updProg(objIdx,val){
+  const area=AREAS[selArea],m=area.members[selMember],key=mkKey(area,m);
+  if(!data[key])data[key]=defMember(m);
+  data[key]["obj"+objIdx].progress=parseInt(val);
+  const fill=document.getElementById(`fill-${selArea}-${selMember}-${objIdx}`);
+  if(fill)fill.style.width=val+"%";
+  const lbl=document.getElementById(`lbl-${selArea}-${selMember}-${objIdx}`);
+  if(lbl)lbl.textContent=val+"%";
+  saveData();renderStats();renderAreaTabs();renderTeamBar();renderSidebar();
+}
+function updNotes(objIdx,val){
+  const area=AREAS[selArea],m=area.members[selMember],key=mkKey(area,m);
+  if(!data[key])data[key]=defMember(m);
+  data[key]["obj"+objIdx].notes=val;
+  saveData();
+}
+
+
+function getFileIcon(type){
+  if(type.includes("pdf"))return"📄";
+  if(type.includes("image"))return"🖼️";
+  if(type.includes("word")||type.includes("docx"))return"📝";if(type.includes("excel")||type.includes("sheet"))return"📊";if(type.includes("presentation")||type.includes("powerpoint"))return"📊";if(type.includes("text"))return"📋";if(type.includes("zip"))return"🗜️";
+  return"📎";
+}
+function fmtSize(bytes){if(bytes<1024)return bytes+"B";if(bytes<1048576)return(bytes/1024).toFixed(1)+"KB";return(bytes/1048576).toFixed(1)+"MB";}
+
+function triggerAttach(objIdx){
+  const inp=document.getElementById("file-inp-"+objIdx);
+  if(inp)inp.click();
+}
+
+function handleAttach(objIdx,input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){
+    alert("El archivo supera 3MB. Por favor adjunta una versión más ligera.");
+    input.value="";return;
+  }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const area=AREAS[selArea],m=area.members[selMember],key=mkKey(area,m);
+    if(!data[key])data[key]=defMember(m);
+    if(!data[key]["obj"+objIdx].attachments)data[key]["obj"+objIdx].attachments=[];
+    data[key]["obj"+objIdx].attachments.push({name:file.name,type:file.type,size:file.size,data:e.target.result,date:new Date().toLocaleDateString("es-PE")});
+    input.value="";
+    saveData();renderDetail();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeAttach(objIdx,attIdx){
+  const area=AREAS[selArea],m=area.members[selMember],key=mkKey(area,m);
+  data[key]["obj"+objIdx].attachments.splice(attIdx,1);
+  saveData();renderDetail();
+}
+
+function viewAttach(objIdx,attIdx){
+  const area=AREAS[selArea],m=area.members[selMember],key=mkKey(area,m);
+  const att=data[key]["obj"+objIdx].attachments[attIdx];
+  const win=window.open();
+  if(att.type.includes("image")){
+    win.document.write(`<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${att.data}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);
+  } else {
+    const a=win.document.createElement("a");a.href=att.data;a.download=att.name;win.document.body.appendChild(a);a.click();win.close();
+  }
+}
+
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const fecha=new Date().toLocaleDateString("es-PE");
+  // Resumen global
+  const rows=[["VINATEA & TOYAMA — CID"],["Seguimiento de Objetivos — 2025"],["Exportado: "+fecha],[],
+    ["Área","Supervisor","Nombre","Cargo","Objetivo","Peso (%)","Fecha","Estado","Avance (%)","Av. Ponderado (%)","Observaciones"]];
+  AREAS.forEach(a=>{
+    a.members.forEach(m=>{
+      const ms=data[mkKey(a,m)]||defMember(m);
+      const wp=Math.round(calcW(m,ms));
+      m.objectives.forEach((obj,i)=>{
+        const s=ms["obj"+i]||defObj();
+        const eff=s.status==="completado"?100:s.progress;
+        rows.push([i===0?a.label:"",i===0?a.supervisor:"",i===0?m.name:"",i===0?m.role:"",obj.text,obj.weight,obj.date,slbl(s.status),eff,i===0?wp:"",s.notes||""]);
+      });
+      rows.push([]);
+    });
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"]=[{wch:22},{wch:16},{wch:20},{wch:10},{wch:55},{wch:8},{wch:9},{wch:14},{wch:10},{wch:18},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws,"Resumen");
+  // Hoja por área
+  AREAS.forEach(a=>{
+    const arows=[[a.label.toUpperCase()+" — "+a.supervisor],[`Exportado: ${fecha}`],[],["Nombre","Cargo","Objetivo","Peso","Fecha","Estado","Avance (%)","Observaciones"]];
+    a.members.forEach(m=>{
+      const ms=data[mkKey(a,m)]||defMember(m);
+      m.objectives.forEach((obj,i)=>{
+        const s=ms["obj"+i]||defObj();
+        arows.push([i===0?m.name:"",i===0?m.role:"",obj.text,obj.weight+"%",obj.date,slbl(s.status),s.status==="completado"?100:s.progress,s.notes||""]);
+      });
+      arows.push([]);
+    });
+    const aws=XLSX.utils.aoa_to_sheet(arows);
+    aws["!cols"]=[{wch:20},{wch:10},{wch:55},{wch:8},{wch:9},{wch:14},{wch:10},{wch:40}];
+    XLSX.utils.book_append_sheet(wb,aws,a.label.substring(0,20));
+  });
+  XLSX.writeFile(wb,`Objetivos_CID_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+data=loadData();
+// Asegura que todos los miembros tengan su estado
+AREAS.forEach(a=>a.members.forEach(m=>{const k=mkKey(a,m);if(!data[k])data[k]=defMember(m);}));
+render();
+</script>
+</body>
+</html>
